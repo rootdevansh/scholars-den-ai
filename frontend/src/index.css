@@ -1,0 +1,167 @@
+/* ── Google Fonts ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS Variables ───────────────────────────────────────── */
+:root {
+  --yellow: #FFE500;
+  --bg: #0A0A0A;
+  --card: #141414;
+  --border: #242424;
+  --text: #FAFAF7;
+  --muted: #666666;
+  --success: #2ED573;
+  --danger: #FF4757;
+}
+
+/* ── Base ─────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--yellow);
+  color: #000;
+}
+
+/* ── Custom Scrollbar ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--card); }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--yellow); }
+
+/* ── Utility Classes ──────────────────────────────────────── */
+@layer components {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+  }
+
+  .yellow-glow {
+    box-shadow: 0 0 20px rgba(255, 229, 0, 0.25);
+  }
+
+  .yellow-glow-sm {
+    box-shadow: 0 0 10px rgba(255, 229, 0, 0.15);
+  }
+
+  .card-hover {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card-hover:hover {
+    border-color: rgba(255, 229, 0, 0.3);
+    box-shadow: 0 0 16px rgba(255, 229, 0, 0.1);
+  }
+
+  .btn-primary {
+    @apply bg-den-yellow text-black font-semibold px-6 py-3 rounded-xl
+           hover:brightness-110 active:scale-95 transition-all duration-150
+           font-grotesk;
+  }
+
+  .btn-secondary {
+    @apply bg-den-card text-den-text font-medium px-6 py-3 rounded-xl
+           border border-den-border hover:border-den-yellow/40
+           active:scale-95 transition-all duration-150 font-grotesk;
+  }
+
+  .badge-must {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+           bg-den-yellow text-black text-xs font-bold tracking-wider uppercase;
+  }
+
+  .badge-bare {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+           bg-den-border text-den-muted text-xs font-semibold tracking-wider uppercase;
+  }
+
+  .input-field {
+    @apply w-full bg-den-card border border-den-border rounded-xl px-4 py-3
+           text-den-text placeholder-den-muted focus:outline-none
+           focus:border-den-yellow/50 focus:ring-1 focus:ring-den-yellow/20
+           transition-all duration-150 font-grotesk;
+  }
+
+  .section-heading {
+    @apply font-syne font-bold text-2xl text-den-text;
+  }
+
+  .stat-number {
+    @apply font-syne font-bold text-4xl text-den-yellow;
+  }
+}
+
+/* ── Grain texture overlay ────────────────────────────────── */
+.grain::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px;
+}
+
+/* ── Confetti burst animation ─────────────────────────────── */
+@keyframes confetti-burst {
+  0%   { transform: scale(0) rotate(0deg); opacity: 1; }
+  100% { transform: scale(2) rotate(360deg); opacity: 0; }
+}
+.confetti-burst {
+  animation: confetti-burst 0.6s ease-out forwards;
+}
+
+/* ── Pulse animation for AI tutor dot ─────────────────────── */
+@keyframes pulse-ring {
+  0%   { transform: scale(0.8); opacity: 0.8; }
+  50%  { transform: scale(1.2); opacity: 0.3; }
+  100% { transform: scale(0.8); opacity: 0.8; }
+}
+.pulse-ring { animation: pulse-ring 1.5s ease-in-out infinite; }
+
+/* ── Blob background animation ────────────────────────────── */
+@keyframes blob {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  25%       { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  50%       { border-radius: 50% 60% 30% 60% / 30% 60% 70% 40%; }
+  75%       { border-radius: 60% 40% 60% 30% / 70% 30% 50% 60%; }
+}
+.blob { animation: blob 8s ease-in-out infinite; }
+.blob-delay { animation-delay: 3s; }
+
+/* ── Shimmer skeleton ─────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ── Typing dots animation ────────────────────────────────── */
+@keyframes typing-dot {
+  0%, 80%, 100% { transform: scale(0.8); opacity: 0.4; }
+  40%           { transform: scale(1.2); opacity: 1; }
+}
+.typing-dot { animation: typing-dot 1.2s ease-in-out infinite; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
