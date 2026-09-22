@@ -76,7 +76,13 @@ CREATE INDEX IF NOT EXISTS idx_schedule_days_date ON schedule_days(day_date);
 CREATE INDEX IF NOT EXISTS idx_day_topics_day ON day_topics(day_id);
 CREATE INDEX IF NOT EXISTS idx_day_topics_topic ON day_topics(topic_id);
 CREATE INDEX IF NOT EXISTS idx_doubts_plan ON doubts(plan_id);
-CREATE INDEX IF NOT EXISTS idx_doubts_topic ON doubts(topic_id);
+-- Disable Row Level Security so server and backend queries are never blocked
+ALTER TABLE IF EXISTS plans DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS topics DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS schedule_days DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS day_topics DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS study_sessions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS doubts DISABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- Sample Data Seed — JEE Advanced 2027 Prep

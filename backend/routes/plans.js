@@ -22,19 +22,120 @@ router.get('/', async (req, res) => {
   }
 });
 
+const SAMPLE_TOPICS = [
+  { subject: 'Physics', name: 'Electromagnetism', weightage: 10, mastery: 'weak', estimated_hours: 14 },
+  { subject: 'Chemistry', name: 'Organic Chemistry', weightage: 10, mastery: 'weak', estimated_hours: 16 },
+  { subject: 'Physics', name: 'Mechanics', weightage: 9, mastery: 'weak', estimated_hours: 12 },
+  { subject: 'Chemistry', name: 'Physical Chemistry', weightage: 8, mastery: 'weak', estimated_hours: 12 },
+  { subject: 'Mathematics', name: 'Coordinate Geometry', weightage: 7, mastery: 'weak', estimated_hours: 8 },
+  { subject: 'Mathematics', name: 'Calculus', weightage: 10, mastery: 'medium', estimated_hours: 14 },
+  { subject: 'Mathematics', name: 'Algebra', weightage: 8, mastery: 'medium', estimated_hours: 10 },
+  { subject: 'Physics', name: 'Thermodynamics', weightage: 7, mastery: 'medium', estimated_hours: 8 },
+  { subject: 'Chemistry', name: 'Inorganic Chemistry', weightage: 7, mastery: 'medium', estimated_hours: 10 },
+  { subject: 'Physics', name: 'Optics', weightage: 6, mastery: 'medium', estimated_hours: 6 },
+  { subject: 'Mathematics', name: 'Probability', weightage: 5, mastery: 'medium', estimated_hours: 6 },
+  { subject: 'Physics', name: 'Modern Physics', weightage: 7, mastery: 'strong', estimated_hours: 5 },
+  { subject: 'Mathematics', name: 'Trigonometry', weightage: 6, mastery: 'strong', estimated_hours: 5 },
+  { subject: 'Chemistry', name: 'Electrochemistry', weightage: 5, mastery: 'strong', estimated_hours: 4 },
+];
+
+async function seedPlanOnTheFly(sb) {
+  const examDate = new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0];
+
+  // 1. Insert plan
+  const { data: plan, error: pErr } = await sb
+    .from('plans')
+    .insert({
+      name: 'JEE Advanced 2027 Prep',
+      exam_date: examDate,
+      daily_hours: 6,
+    })
+    .select()
+    .single();
+
+  if (pErr) throw pErr;
+
+  // 2. Insert topics
+  const rows = SAMPLE_TOPICS.map((t) => ({
+    plan_id: plan.id,
+    subject: t.subject,
+    name: t.name,
+    weightage: t.weightage,
+    mastery: t.mastery,
+    estimated_hours: t.estimated_hours,
+    status: 'pending',
+  }));
+
+  const { data: insertedTopics, error: tErr } = await sb
+    .from('topics')
+    .insert(rows)
+    .select();
+
+  if (tErr) throw tErr;
+
+  // 3. Generate schedule
+  const schedule = generateSchedule(plan, insertedTopics || rows);
+
+  // 4. Insert schedule days
+  for (const day of schedule) {
+    const { data: dayRow } = await sb
+      .from('schedule_days')
+      .insert({
+        id: uuidv4(),
+        plan_id: plan.id,
+        day_date: day.day_date,
+        day_number: day.day_number,
+        status: 'pending',
+      })
+      .select('id')
+      .single();
+
+    if (dayRow && day.topics && day.topics.length) {
+      const dtRows = day.topics.map((t) => ({
+        id: uuidv4(),
+        day_id: dayRow.id,
+        topic_id: t.topic_id,
+        allocated_hours: t.allocated_hours,
+        status: 'pending',
+      }));
+      await sb.from('day_topics').insert(dtRows);
+    }
+  }
+
+  return { id: plan.id, name: plan.name };
+}
+
 // ─── GET /api/plans/sample/load — Get the seeded sample plan ─────────────────
 router.get('/sample/load', async (req, res) => {
   try {
-    const { data, error } = await supabase
+    // 1. Try finding by name (limit 1 to avoid throwing if 0 found)
+    const { data: planList } = await supabase
       .from('plans')
       .select('id, name')
       .eq('name', 'JEE Advanced 2027 Prep')
-      .single();
-    if (error || !data) {
-      return res.status(404).json({ error: 'Sample plan not found. Run schema.sql in Supabase first.' });
+      .limit(1);
+
+    if (planList && planList.length > 0) {
+      return res.json({ planId: planList[0].id, name: planList[0].name });
     }
-    res.json({ planId: data.id, name: data.name });
+
+    // 2. Check if ANY plan exists in the database
+    const { data: anyPlans } = await supabase
+      .from('plans')
+      .select('id, name')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (anyPlans && anyPlans.length > 0) {
+      return res.json({ planId: anyPlans[0].id, name: anyPlans[0].name });
+    }
+
+    // 3. If zero plans exist, auto-seed right now on the fly
+    console.log('⚡ No plan found in database — auto-seeding sample plan now...');
+    const seeded = await seedPlanOnTheFly(supabase);
+    res.json({ planId: seeded.id, name: seeded.name });
   } catch (err) {
+    console.error('Error loading sample plan:', err);
     res.status(500).json({ error: err.message });
   }
 });
